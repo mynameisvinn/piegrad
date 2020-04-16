@@ -1,17 +1,18 @@
 # piegrad
-a python implementation of autograd. it automatically differentiates any arbitrary function.
+a python implementation of autograd. it automatically differentiates arbitrary functions written in python.
 
-piegrad does something called "source code transformation". by using a specific set of rules (eg decrement exponent by 1 and multiply coefficent by exponent), piegrad converts `func`'s' ast to an ast corresponding to `grad`. by working at the ast level, we can leverage cpython's parser.
+piegrad does something called "source code transformation". by using a specific set of rules (eg decrement exponent by 1 and multiply coefficent by exponent), piegrad converts `func`'s' ast to an ast corresponding to `grad`. by working at the ast level, we leverage cpython's parser.
 
 ## example
-suppose we have function `func` and want to find its gradient `grad`. 
+suppose we have function `f` and want to find its gradient `f_prime`. 
 ```python
-def func(x):
+from PieGrad import grad
+
+def f(x):
 	return 2*(x**3) + 1
 
-# the correct gradient is
-def grad(x):
-	return 6*x
+f_prime = grad(f)  # return gradient of 6 * x ** 2
+f_prime(2)  # prints 24
 ```
 ## how dey do dat?
 starting from root, we recursively traverse down the abstract syntax tree with a depth first search. 
