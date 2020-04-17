@@ -10,18 +10,20 @@ class grad(object):
         self.binop_stack = []
         self.data_stack = []
         
-        # convert string source code to ast
-        tree = ast.parse(inspect.getsource(function), mode='exec')
+        # convert function object to source code, then convert source to ast
+        source_code = inspect.getsource(function)
+        tree = ast.parse(source_code, mode='exec')
         
-        # start from root, modify root
+        # starting from root, we will trace our way until we hit leaves
         root = tree.body[0].body[0].value
         self.down(root)
         
-        # modified
-        self.curr = tree.body[0]  
-        source = astor.to_source(self.curr)
-        print(source) 
+        # we can view the modified ast as string
+        self.modified_code = tree.body[0]  
+        source = astor.to_source(self.modified_code)
+        print(source)
         
+        # convert ast into function object
         # https://stackoverflow.com/questions/48759838/how-to-create-a-function-object-from-an-ast-functiondef-node
         code = compile(tree, 'hello.py', 'exec')
         self.namespace = {}
@@ -33,11 +35,11 @@ class grad(object):
 
     def down(self, node):
         """
-        using depth first search, add to stack ("binop_stack") if node is a 
-        binop. otherwise evaluate leaf nodes by calling evaluate.
+        using depth first search, add each node to binop_stack if it is a binop. 
+        otherwise evaluate leaf by calling evaluate().
         """
 
-        # scenario 1 - it is a binop, which means it is not a leaf
+        # scenario 1 - node is a binop, which means it is not a leaf
         if isinstance(node, ast.BinOp):
             print("adding", node.op, "to binop stack")
             self.binop_stack.append(node)
@@ -46,12 +48,13 @@ class grad(object):
             self.down(node.left)
             self.down(node.right)
 
-            # once we've explore left and right children, remove binop from stack
+            # once we've explore its children, remove binop node from stack
             self.binop_stack.pop()  
 
-        # scenario 2 - it is a leaf, so evaluate according to a specific set of rules
+        # scenario 2 - node is a leaf, so evaluate appropriately
         else:
             self.evaluate(node)
+
 
     def evaluate(self, z):
         """evaluate a leaf node.
